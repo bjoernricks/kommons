@@ -21,4 +21,9 @@
 
 __version_info__ = ("0", "1dev1")
 __version__ = '.'.join(__version_info__)
+__description__ = "A python library for common classes and functions"
+__author__ = u"Björn Ricks"
+__author_email__ ="bjoern.ricks@gmail.com",
+__url__ ="http://github.com/bjoernricks/python-quilt",
+__license__ ="LGPLv2.1+",
 
