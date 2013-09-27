@@ -26,7 +26,8 @@ Modules
 Currently kommons includes the following modules:
 
  * kommons.path - File and directory handling
- * kommins.process - Starting and handling of subprocesses
+ * kommons.plugin - Load python modules and classes dynamically at runtime
+ * kommons.process - Starting and handling of subprocesses
  * kommons.signals - A signals/slots implementation
 
 Todo:
