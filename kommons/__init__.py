@@ -1,4 +1,4 @@
-# vim: fileencoding=utf-8 et sw=4 ts=4 tw=80:
+# -*- coding: utf-8 -*-
 
 # kommons - A library for common classes and functions
 #
@@ -27,3 +27,4 @@ __author_email__ ="bjoern.ricks@gmail.com",
 __url__ ="http://github.com/bjoernricks/python-quilt",
 __license__ ="LGPLv2.1+",
 
+# vim: et sw=4 ts=4 tw=80:
