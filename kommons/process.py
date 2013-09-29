@@ -24,7 +24,7 @@
 import os
 import subprocess
 
-from kommon.errors import KommonRuntimeError
+from kommons.errors import KommonRuntimeError
 
 
 class SubprocessError(KommonRuntimeError):
