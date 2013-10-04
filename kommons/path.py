@@ -115,7 +115,7 @@ class Directory(object):
         shutil.copytree(self.dirname, dest)
 
     def __add__(self, other):
-        if other == None:
+        if other is None:
             return self
         if isinstance(other, Directory):
             return Directory(os.path.join(self.dirname, other.dirname))
