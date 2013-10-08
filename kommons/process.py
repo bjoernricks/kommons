@@ -39,7 +39,7 @@ class SubprocessError(KommonRuntimeError):
 
     def __str__(self):
         retval = "Command %s finished with return code %d" % (self.command,
-                     self.returncode)
+                                                              self.returncode)
         if self.output:
             retval += "Output was: '%s'" % self.output
         return retval
