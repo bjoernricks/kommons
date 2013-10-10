@@ -29,6 +29,7 @@ Currently kommons includes the following modules:
  * kommons.plugin - Load python modules and classes dynamically at runtime
  * kommons.process - Starting and handling of subprocesses
  * kommons.signals - A signals/slots implementation
+ * kommons.decorators - Decorators for classes, methods and functions
 
 Todo:
  * kommons.cli - Building and parsing of command line interfaces
