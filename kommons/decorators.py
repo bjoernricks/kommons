@@ -19,18 +19,26 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
-""" Kommon python modules, classes and functions
+import warnings
 
-Kommons is a collection of python modules, classes and functions which are used
-in several projects and simplify standard recurrent tasks
-"""
+from functools import wraps
 
-__version_info__ = ("0", "1dev1")
-__version__ = '.'.join(__version_info__)
-__description__ = "A python library for common classes and functions"
-__author__ = u"Björn Ricks"
-__author_email__ = "bjoern.ricks@gmail.com",
-__url__ = "http://github.com/bjoernricks/python-quilt",
-__license__ = "LGPLv2.1+",
 
-# vim: et sw=4 ts=4 tw=80:
+def deprecated(message):
+    """
+    A decorator to raise a warning message when using the decorated function or
+    method.
+
+    Usage:
+        @depracted("myfunc will be dropped with version 3.2. Please use"
+                   "myfunc2 instead")
+        def myfunc(...):
+            ...
+    """
+    def wrapper(f):
+        @wraps(f)
+        def inner(*args, **kwargs):
+            warnings.warn(message, category=DeprecationWarning,  stacklevel=2)
+            return f(*args, **kwargs)
+        return inner
+    return wrapper
