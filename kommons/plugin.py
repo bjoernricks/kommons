@@ -79,18 +79,22 @@ class FileLoader(object):
     """
 
     def __init__(self, paths=None):
-        self.paths = paths or []
+        self.paths = paths
 
     def add_path(self, path):
         """
         Adds a path to the module search path
         """
+        if self.path is None:
+            self.path = []
         self.paths.append(path)
 
     def add_paths(self, paths):
         """
         Adds a path list to the module search path
         """
+        if self.path is None:
+            self.path = []
         self.paths.extend(paths)
 
     def _load_module(self, module_name, paths, as_module=None):
@@ -121,8 +125,11 @@ class FileLoader(object):
             package = name[:index]
             module_name = name[index+1:]
             module_path = package.replace(".", os.path.sep)
-            for path in self.paths:
-                paths.append(os.path.join(path, module_path))
+            if self.paths:
+                for path in self.paths:
+                    paths.append(os.path.join(path, module_path))
+            else:
+                paths.append(module_path)
         else:
             module_name = name
             paths = self.paths
