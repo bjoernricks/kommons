@@ -183,6 +183,6 @@ class StringLoader(object):
         else:
             mod.__package__ = fullname.rpartition('.')[0]
         exec(code, mod.__dict__)
-        return mod
+        return Module(mod, code)
 
 # vim: et sw=4 ts=4 tw=80:
