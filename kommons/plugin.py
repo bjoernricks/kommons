@@ -137,4 +137,34 @@ class FileLoader(object):
             logger.warn("Could not import module '%s'. %s" % (name, error))
             return None
 
+
+class StringLoader(object):
+
+    """
+    Load a python module from a String
+    """
+
+    def __init__(self, code):
+        self.code = code
+
+    def get_code(self):
+        return self.code
+
+    def is_package(self, fullname):
+        return False
+
+    def load_module(self, fullname):
+        code = self.get_code()
+        ispkg = self.is_package(fullname)
+        mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
+        mod.__file__ = "<%s>" % self.__class__.__name__
+        mod.__loader__ = self
+        if ispkg:
+            mod.__path__ = []
+            mod.__package__ = fullname
+        else:
+            mod.__package__ = fullname.rpartition('.')[0]
+        exec(code, mod.__dict__)
+        return mod
+
 # vim: et sw=4 ts=4 tw=80:
