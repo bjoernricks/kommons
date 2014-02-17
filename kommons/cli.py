@@ -28,56 +28,56 @@ import argparse
 import copy
 
 
+def get_declared_instances_list(bases, attrs, collect_cls, instance_attr):
+    instances = [(name, attrs.pop(name)) for name, obj in attrs.items() if
+                 isinstance(obj, collect_cls)]
+    instances.sort(key=lambda x: x[1].creation_counter)
+    for base in bases[::-1]:
+        if hasattr(base, instance_attr):
+            instances = getattr(base, instance_attr) + instances
+    return instances
+
+
+def get_declared_instances_dict(bases, attrs, collect_cls, instance_attr):
+    instances = {}
+    for name, obj in attrs.items():
+        if isinstance(obj, collect_cls):
+            instances[name] = attrs.pop(name)
+    for base in bases[::-1]:
+        if hasattr(base, instance_attr):
+            instances.update(getattr(base, instance_attr))
+    return instances
+
+
+def get_first_declared_instance(bases, attrs, collect_cls, instance_attr):
+    for name, obj in attrs.items():
+        if isinstance(obj, collect_cls):
+            return name, attrs.pop(name)
+    for base in bases[::-1]:
+        if hasattr(base, instance_attr):
+            return getattr(base, instance_attr)
+    return None
+
+
 class ArgumentsCollectorMetaClass(type):
 
     """ MetaClass to collect defined arguments and groups """
 
-    @classmethod
-    def get_declared_arguments(cls, bases, attrs):
-        """
-        Collects all defined Argument instances as a name instance
-        key/value pair returned in a dict.
-
-        @return key/value pair of name and instance of all Argument classes
-        """
-
-        arguments = {}
-        for name, obj in attrs.items():
-            if isinstance(obj, Argument):
-                arguments[name] = attrs.pop(name)
-
-        for base in bases[::-1]:
-            if hasattr(base, "base_arguments"):
-                arguments.update(base.base_arguments)
-        return arguments
-
-    @classmethod
-    def get_declared_groups(cls, bases, attrs):
-        """
-        Collects all defined Group instances in a sorted list.
-        The list is sorted by the creation counter of each Group instance.
-
-        @return Returns a list of name, instance tuples sorted by the creation
-        counter of the instance.
-        """
-        groups = [(name, attrs.pop(name)) for name, obj in attrs.items() if
-                  isinstance(obj, ArgumentGroup)]
-        groups.sort(key=lambda x: x[1].creation_counter)
-
-        for base in bases[::-1]:
-            if hasattr(base, "base_groups"):
-                groups = base.base_groups + groups
-        return groups
-
     def __new__(cls, name, bases, attrs):
         """
         Collects all Argument and Group instances and sets them as
-        base_arguments respectively base_groups in the new created class.
-        Arguments mentioned in the Group instances will be not added to
+        base_arguments respectively base_argument_groups in the new created
+        class. Arguments mentioned in the Group instances will be not added to
         base_arguments.
         """
-        arguments = cls.get_declared_arguments(bases, attrs)
-        groups = cls.get_declared_groups(bases, attrs)
+        arguments = get_declared_instances_dict(bases, attrs, Argument,
+                                                "base_arguments")
+        groups = get_declared_instances_list(bases, attrs, ArgumentGroup,
+                                             "base_argument_groups")
+        subparsers = get_declared_instances_dict(bases, attrs, BaseSubparser,
+                                                 "base_subparsers")
+        sgroup = get_first_declared_instance(bases, attrs, SubparserGroup,
+                                             "subparser_group")
         new_class = super(ArgumentsCollectorMetaClass, cls).__new__(
             cls, name, bases, attrs)
 
@@ -88,7 +88,20 @@ class ArgumentsCollectorMetaClass(type):
                     arg = arguments.pop(arg_name)
                     arg.set_name(arg_name)
                     group.add_argument(arg)
-        new_class.base_groups = groups
+        new_class.base_argument_groups = groups
+
+        if not sgroup and subparsers:
+            sgroup = None, SubparserGroup(subparser_names=[key for key in
+                                                           subparsers.keys()])
+
+        if sgroup:
+            name, group = sgroup
+            group.set_name(name)
+            for sname in group.subparser_names:
+                sparser = subparsers.pop(sname)
+                sparser.set_name(sname)
+                group.add_subparser(sparser)
+            new_class.subparser_group = group
 
         args = []
         if arguments:
@@ -98,6 +111,8 @@ class ArgumentsCollectorMetaClass(type):
 
         args.sort(key=lambda x: x[1].creation_counter)
         new_class.base_arguments = args
+
+        new_class.base_subparsers = subparsers
 
         return new_class
 
@@ -162,6 +177,61 @@ class ArgumentGroup(object):
         @parma arg An Argument instance to be added to this group.
         """
         self.arguments.append(arg)
+
+
+class SubparserGroup(object):
+
+    """
+    A class to add subparsers to a parser in a declerative fashion
+    """
+
+    creation_counter = 0
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.creation_counter = Argument.creation_counter
+        self.subparser_names = kwargs.pop("subparser_names", None) or []
+        self.subparsers = []
+        Argument.creation_counter += 1
+
+    def _get_kwargs(self):
+        kwargs = {}
+
+        if self.name is not None:
+            kwargs["dest"] = self.name
+
+        kwargs.update(self.kwargs)
+        return kwargs
+
+    def _get_args(self):
+        return self.args
+
+    def set_name(self, name):
+        """
+        Sets the name of this Subparser
+
+        Normally this method should not be called directly.
+        It is used by the ArgumentsCollectorMetaClass.
+
+        :param name A string for a name
+        """
+        self.name = name
+
+    def add_subparser(self, parser):
+        """
+        Adds a Subparser to this group
+        Normally this method should not be called directly.
+        It is used by the ArgumentsCollectorMetaClass.
+
+        :param arg An Argument instance to be added to this group.
+        """
+        self.subparsers.append(parser)
+
+    def add_to_parser(self, parser):
+        parser.set_subparsers_args(*self._get_args(), **self._get_kwargs())
+        for sparser in self.subparsers:
+            parser.add_subparser(sparser)
 
 
 class Argument(object):
@@ -231,10 +301,10 @@ class OptionArgument(Argument):
     Usage:
         class MyParser(Parser):
 
-            arg1 = OptionalArgument(help="A first string argument")
-            arg2 = OptionalArgument(type=int)
-            arg3 = OptionalArgument(nargs=2)
-            arg4 = OptionalArgument(required=True)
+            arg1 = OptionArgument(help="A first string argument")
+            arg2 = OptionArgument(type=int)
+            arg3 = OptionArgument(nargs=2)
+            arg4 = OptionArgument(required=True)
     """
 
     prefix_chars = "--"
@@ -244,6 +314,48 @@ class OptionArgument(Argument):
         if not args:
             args = (self.prefix_chars + self.name,)
         return args
+
+
+class BaseSubparser(object):
+
+    def __init__(self, *args, **kwargs):
+        super(BaseSubparser, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+        self.name = None
+
+    def set_name(self, name):
+        """
+        Sets the name of this Subparse.
+        Normally this method should not be called directly.
+        It is used by the ArgumentsCollectorMetaClass.
+
+        :param name A string for a name
+        """
+        self.name = name
+
+    def _get_kwargs(self):
+        return self.kwargs
+
+    def _get_args(self):
+        if self.name:
+            return (self.name,) + self.args
+        return self.args
+
+    def add_to_parser(self, subparsers):
+        """
+        Adds this Subparser to the subparsers created by
+        argparse.ArgumentParser.add_subparsers method.
+
+        @param subparsers Normally a _SubParsersAction instance created by
+        argparse.ArgumentParser.add_subparsers method
+        """
+        parser = subparsers.add_parser(*self._get_args(), **self._get_kwargs())
+        for name, group in self.base_argument_groups:
+            group.add_to_parser(parser)
+        for name, arg in self.base_arguments:
+            arg.add_to_parser(parser)
+        self.add_subparsers(parser)
 
 
 class SubparsersMixin(object):
@@ -305,6 +417,10 @@ class SubparsersMixin(object):
 
         @param parser An argparse.ArgumentParser instance
         """
+        sgroup = getattr(self, "subparser_group", None)
+        if sgroup:
+            sgroup.add_to_parser(self)
+
         if not self.subparsers:
             return
 
@@ -336,7 +452,7 @@ class Parser(SubparsersMixin):
         Method to create and initalize an argparser.ArgumentParser
         """
         parser = argparse.ArgumentParser(*self.args, **self.kwargs)
-        for name, group in self.base_groups:
+        for name, group in self.base_argument_groups:
             group.add_to_parser(parser)
         for name, arg in self.base_arguments:
             arg.add_to_parser(parser)
@@ -364,7 +480,7 @@ class Parser(SubparsersMixin):
         self.parser.print_help(*args, **kwargs)
 
 
-class Subparser(SubparsersMixin):
+class Subparser(SubparsersMixin, BaseSubparser):
 
     """
     A subparser class
@@ -381,26 +497,6 @@ class Subparser(SubparsersMixin):
     """
 
     __metaclass__ = ArgumentsCollectorMetaClass
-
-    def __init__(self, *args, **kwargs):
-        super(Subparser, self).__init__()
-        self.args = args
-        self.kwargs = kwargs
-
-    def add_to_parser(self, subparsers):
-        """
-        Adds this Subparser to the subparsers created by
-        argparse.ArgumentParser.add_subparsers method.
-
-        @param subparsers Normally a _SubParsersAction instance created by
-        argparse.ArgumentParser.add_subparsers method
-        """
-        parser = subparsers.add_parser(*self.args, **self.kwargs)
-        for name, group in self.base_groups:
-            group.add_to_parser(parser)
-        for name, arg in self.base_arguments:
-            arg.add_to_parser(parser)
-        self.add_subparsers(parser)
 
 
 if __name__ == "__main__":
