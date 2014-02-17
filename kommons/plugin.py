@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 
 class Module(object):
 
-    def __init__(self, module):
+    def __init__(self, module, source=None):
         self.module = module
+        self.source = source
 
     def get_classes(self, parentclass=None, all=False):
         """
@@ -66,6 +67,9 @@ class Module(object):
             if cls.__name__ == classname:
                 return cls
         return None
+
+    def get_source(self):
+        return self.source
 
 
 class FileLoader(object):
