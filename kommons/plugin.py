@@ -100,12 +100,18 @@ class FileLoader(object):
     def _load_module(self, module_name, paths, as_module=None):
         if not as_module:
             as_module = module_name
-        file, pathname, description = imp.find_module(module_name, paths)
+        f, pathname, description = imp.find_module(module_name, paths)
         try:
-            return imp.load_module(as_module, file, pathname, description)
+            source = f.read()
+            f.seek(0)
+            module = imp.load_module(as_module, f, pathname, description)
         finally:
-            if file:
-                file.close()
+            if f:
+                f.close()
+
+        logger.debug("Imported module '%s'" % module)
+
+        return Module(module, source)
 
     def load_module(self, name, as_module=None):
         """
@@ -141,9 +147,7 @@ class FileLoader(object):
                             "previous loaded module with the same name." % \
                             as_module)
                 del sys.modules[as_module]
-            module = self._load_module(module_name, paths, as_module)
-            logger.debug("Imported module '%s'" % module)
-            return Module(module)
+            return self._load_module(module_name, paths, as_module)
         except ImportError, error:
             logger.warn("Could not import module '%s'. %s" % (name, error))
             return None
