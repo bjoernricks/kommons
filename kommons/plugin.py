@@ -2,7 +2,7 @@
 
 # kommons - A library for common classes and functions
 #
-# Copyright (C) 2013  Björn Ricks <bjoern.ricks@gmail.com>
+# Copyright (C) 2013, 2014 Björn Ricks <bjoern.ricks@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -27,29 +27,88 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+class Module(object):
 
-class Loader(object):
+    def __init__(self, module):
+        self.module = module
 
-    def __init__(self):
-        self.paths = []
+    def get_classes(self, parentclass=None, all=False):
+        """
+        Returns all classes of the module
+
+        :param parentclass Only returns classes that are child of parentclass
+        :param all If False only classes from module are returned. Imported
+                   classes are excluded in that case.
+        """
+        classes = []
+        for key, value in self.module.__dict__.items():
+            if inspect.isclass(value):
+                if parentclass:
+                    if not issubclass(value, parentclass):
+                        continue
+                # only load classes from module
+                if not all and value.__module__ != module.__name__:
+                    logger.debug("Skipping class '%s'" % value)
+                    continue
+                logger.debug("Found class '%s'" % value)
+                classes.append(value)
+        return classes
+
+    def get_class(self, classname):
+        """
+        Returns the class from the module with name classname or None if not
+        found.
+        """
+        classes = self.get_classes()
+        if not classes:
+            return None
+        for cls in classes:
+            if cls.__name__ == classname:
+                return cls
+        return None
+
+
+class FileLoader(object):
+
+    """
+    A module loader class to load modules from "normal" .py files
+    """
+
+    def __init__(self, paths=None):
+        self.paths = paths or []
 
     def add_path(self, path):
+        """
+        Adds a path to the module search path
+        """
         self.paths.append(path)
 
     def add_paths(self, paths):
+        """
+        Adds a path list to the module search path
+        """
         self.paths.extend(paths)
 
-    def find_module(self, module, paths, as_module=None):
+    def _load_module(self, module_name, paths, as_module=None):
         if not as_module:
-            as_module = module
-        file, pathname, description = imp.find_module(module, paths)
+            as_module = module_name
+        file, pathname, description = imp.find_module(module_name, paths)
         try:
             return imp.load_module(as_module, file, pathname, description)
         finally:
             if file:
                 file.close()
 
-    def module(self, name, as_module=None):
+    def load_module(self, name, as_module=None):
+        """
+        Loads a python module by its name
+
+        If found the module is stored as as_module if set or name otherwise.
+
+        The module specified with name may be no valid python package e.g.
+        mypackage/mymodule.py can be loaded via 'mypackage.mymodule' without
+        having to add a mypackage/__init__.py file.
+        """
         if not as_module:
             as_module = name
         if "." in name:
@@ -68,43 +127,14 @@ class Loader(object):
         try:
             if as_module in sys.modules:
                 logger.warn("Reloading '%s' module. This overwrites the " \
-                        "previous loaded module with the same name." % \
-                        as_module)
+                            "previous loaded module with the same name." % \
+                            as_module)
                 del sys.modules[as_module]
-            module = self.find_module(module_name, paths, as_module)
+            module = self._load_module(module_name, paths, as_module)
             logger.debug("Imported module '%s'" % module)
-            return module
+            return Module(module)
         except ImportError, error:
             logger.warn("Could not import module '%s'. %s" % (name, error))
             return None
-
-    def classes(self, module, parentclass=None, all=False):
-        classes = []
-        for key, value in module.__dict__.items():
-            if inspect.isclass(value):
-                if parentclass:
-                    if not issubclass(value, parentclass):
-                        continue
-                # only load classes from module
-                if not all and value.__module__ != module.__name__:
-                    logger.debug("Skipping class '%s'" % value)
-                    continue
-                logger.debug("Found class '%s'" % value)
-                classes.append(value)
-        return classes
-
-    def load(self, modulename, classname):
-        classes = self.classes(modulename)
-        if not classes:
-            logger.warn("Could not load any class with name '%s'" %
-                          classname)
-            return None
-        for loadedclass in classes:
-            if loadedclass.__name__ == classname:
-                logger.info("Loaded class '%s'" % classname)
-                return loadedclass
-        logger.warn("Could not load any class with name '%s'" %
-                      classname)
-        return None
 
 # vim: et sw=4 ts=4 tw=80:
