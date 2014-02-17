@@ -165,6 +165,9 @@ class StringLoader(object):
     def get_code(self):
         return self.code
 
+    def get_filename(self):
+        return self.__class__.__name__
+
     def is_package(self, fullname):
         return False
 
@@ -172,7 +175,7 @@ class StringLoader(object):
         code = self.get_code()
         ispkg = self.is_package(fullname)
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
-        mod.__file__ = "<%s>" % self.__class__.__name__
+        mod.__file__ = "<%s>" % self.get_filename()
         mod.__loader__ = self
         if ispkg:
             mod.__path__ = []
