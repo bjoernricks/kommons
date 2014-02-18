@@ -149,7 +149,7 @@ class StringLoader(object):
         source = self.get_source(fullname)
         return compile(source, self.get_filename(), "exec", dont_inherit=True)
 
-    def get_filename(self):
+    def get_filename(self, fullname):
         return "<%s>" % self.__class__.__name__
 
     def is_package(self, fullname):
