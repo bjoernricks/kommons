@@ -22,7 +22,6 @@
 import imp
 import inspect
 import logging
-import os
 import sys
 
 logger = logging.getLogger(__name__)
@@ -114,43 +113,23 @@ class FileLoader(object):
 
         return Module(module, source)
 
-    def load_module(self, name, as_module=None):
+    def load_module(self, fullname, as_module=None):
         """
         Loads a python module by its name
 
-        If found the module is stored as as_module if set or name otherwise.
-
-        The module specified with name may be no valid python package e.g.
-        mypackage/mymodule.py can be loaded via 'mypackage.mymodule' without
-        having to add a mypackage/__init__.py file.
+        If found the module is stored as as_module if set or fullname otherwise.
         """
         if not as_module:
-            as_module = name
-        if "." in name:
-            paths = []
-            index = name.rfind(".")
-            package = name[:index]
-            module_name = name[index + 1:]
-            module_path = package.replace(".", os.path.sep)
-            if self.paths:
-                for path in self.paths:
-                    paths.append(os.path.join(path, module_path))
-            else:
-                paths.append(module_path)
-        else:
-            module_name = name
-            paths = self.paths
-        if not paths:
-            paths = self.paths
+            as_module = fullname
         try:
             if as_module in sys.modules:
                 logger.warn("Reloading '%s' module. This overwrites the "
                             "previous loaded module with the same name." %
                             as_module)
                 del sys.modules[as_module]
-            return self._load_module(module_name, paths, as_module)
+            return self._load_module(fullname, self.paths, as_module)
         except ImportError, error:
-            logger.warn("Could not import module '%s'. %s" % (name, error))
+            logger.warn("Could not import module '%s'. %s" % (fullname, error))
             return None
 
 
