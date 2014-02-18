@@ -27,6 +27,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+
 class Module(object):
 
     def __init__(self, module, source=None):
@@ -48,7 +49,7 @@ class Module(object):
                     if not issubclass(value, parentclass):
                         continue
                 # only load classes from module
-                if not all and value.__module__ != module.__name__:
+                if not all and value.__module__ != self.module.__name__:
                     logger.debug("Skipping class '%s'" % value)
                     continue
                 logger.debug("Found class '%s'" % value)
@@ -129,7 +130,7 @@ class FileLoader(object):
             paths = []
             index = name.rfind(".")
             package = name[:index]
-            module_name = name[index+1:]
+            module_name = name[index + 1:]
             module_path = package.replace(".", os.path.sep)
             if self.paths:
                 for path in self.paths:
@@ -143,8 +144,8 @@ class FileLoader(object):
             paths = self.paths
         try:
             if as_module in sys.modules:
-                logger.warn("Reloading '%s' module. This overwrites the " \
-                            "previous loaded module with the same name." % \
+                logger.warn("Reloading '%s' module. This overwrites the "
+                            "previous loaded module with the same name." %
                             as_module)
                 del sys.modules[as_module]
             return self._load_module(module_name, paths, as_module)
