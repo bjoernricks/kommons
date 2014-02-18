@@ -139,30 +139,34 @@ class StringLoader(object):
     Load a python module from a String
     """
 
-    def __init__(self, code):
-        self.code = code
+    def __init__(self, source):
+        self.source = source
 
-    def get_code(self):
-        return self.code
+    def get_source(self, fullname):
+        return self.source
+
+    def get_code(self, fullname):
+        source = self.get_source(fullname)
+        return compile(source, self.get_filename(), "exec", dont_inherit=True)
 
     def get_filename(self):
-        return self.__class__.__name__
+        return "<%s>" % self.__class__.__name__
 
     def is_package(self, fullname):
         return False
 
     def load_module(self, fullname):
-        code = self.get_code()
+        source = self.get_source(fullname)
         ispkg = self.is_package(fullname)
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
-        mod.__file__ = "<%s>" % self.get_filename()
+        mod.__file__ = self.get_filename()
         mod.__loader__ = self
         if ispkg:
             mod.__path__ = []
             mod.__package__ = fullname
         else:
             mod.__package__ = fullname.rpartition('.')[0]
-        exec(code, mod.__dict__)
-        return Module(mod, code)
+        exec(source, mod.__dict__)
+        return Module(mod, source)
 
 # vim: et sw=4 ts=4 tw=80:
