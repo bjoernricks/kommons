@@ -229,6 +229,11 @@ class SubparserGroup(object):
         self.subparsers.append(parser)
 
     def add_to_parser(self, parser):
+        """
+        Adds Subparsers to a SubparserMixin (e.g. a Parser)
+
+        :param A SubparsersMixin instance
+        """
         parser.set_subparsers_args(*self._get_args(), **self._get_kwargs())
         for sparser in self.subparsers:
             parser.add_subparser(sparser)
