@@ -373,6 +373,25 @@ class BaseSubparser(object):
             arg.add_to_parser(parser)
         self.add_subparsers(parser)
 
+        if not self.has_subparsers():
+            # only set func if we don't have additional subparsers
+            # if func would be set it would be called always for all subparsers
+            parser.set_defaults(func=self)
+
+    def __call__(self, *args, **kwargs):
+        """
+        Overwrite this method to run code when the subparser command shoulw be
+        called
+        """
+
+    def has_subparsers(self):
+        """
+        Always returns False.
+
+        Should be overriden in a child class if subparsers can be added.
+        """
+        return False
+
 
 class SubparsersMixin(object):
 
