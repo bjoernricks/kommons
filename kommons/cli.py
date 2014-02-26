@@ -224,7 +224,7 @@ class SubparserGroup(object):
         Normally this method should not be called directly.
         It is used by the ArgumentsCollectorMetaClass.
 
-        :param arg An Argument instance to be added to this group.
+        :param parser A BaseSubparser instance
         """
         self.subparsers.append(parser)
 
