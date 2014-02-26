@@ -483,6 +483,9 @@ class Parser(SubparsersMixin):
 
     __metaclass__ = ArgumentsCollectorMetaClass
 
+    __description__ = None
+    __usage__ = None
+
     def __init__(self, *args, **kwargs):
         super(Parser, self).__init__()
         self.args = args
@@ -492,7 +495,14 @@ class Parser(SubparsersMixin):
         """
         Method to create and initalize an argparser.ArgumentParser
         """
-        parser = argparse.ArgumentParser(*self.args, **self.kwargs)
+        kwargs = {}
+        if self.__description__:
+            kwargs["description"] = self.__description__
+        if self.__usage__:
+            kwargrs["usage"] = self.__usage__
+
+        kwargs.update(self.kwargs)
+        parser = argparse.ArgumentParser(*self.args, **kwargs)
         for name, group in self.base_argument_groups:
             group.add_to_parser(parser)
         for name, arg in self.base_arguments:
