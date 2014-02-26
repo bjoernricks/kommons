@@ -553,13 +553,32 @@ class Subparser(SubparsersMixin, BaseSubparser):
 
     Usage:
         Cmd1Parser(Subparser):
-            optarg1 = OptionalArgument()
 
-        MyParser(Parser):
+            optarg1 = OptionArgument()
+
+
+        MyParser1(Parser):
+
             arg1 = Argument("name")
 
-        parser = MyParser()
-        parser.add_subparser(Cmd1Parser("cmd1", help="my cmd1"))
+        parser1 = MyParser1()
+        parser1.add_subparser(Cmd1Parser("cmd1", help="my cmd1"))
+
+        or
+
+        Cmd2Parser(Subparser):
+
+            optarg1 = OptionArgument()
+
+
+        MyParser2(Parser):
+
+            arg2 = OptionArgument()
+
+            cmd1 = Cmd1Parser()
+            cmd2 = Cmd2Parser()
+
+        parser2 = MyParser2()
     """
 
     __metaclass__ = ArgumentsCollectorMetaClass
