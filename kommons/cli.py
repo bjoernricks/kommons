@@ -479,6 +479,21 @@ class Parser(SubparsersMixin):
     Main class to create cli parser
 
     Most of the times your parser should be directly be derived from this class.
+
+    Usage:
+
+        class MyParser(Parser):
+
+            __usage__ = "%(prog)s [options] command {arguments}"
+            __description__ = "my program"
+
+            arg = OptionArgument()
+            debug = OptionArgument(help="print debug output",
+                                   action="store_true")
+
+
+        myparser = MyParser()
+        myparser.parse_args()
     """
 
     __metaclass__ = ArgumentsCollectorMetaClass
