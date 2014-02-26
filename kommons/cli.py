@@ -456,7 +456,7 @@ class SubparsersMixin(object):
         if sgroup:
             sgroup.add_to_parser(self)
 
-        if not self.subparsers:
+        if not self.has_subparsers():
             return
 
         args = self.subparsers_args or self.get_default_subparsers_args()
@@ -465,6 +465,12 @@ class SubparsersMixin(object):
 
         for subparser in self.subparsers:
             subparser.add_to_parser(subs)
+
+    def has_subparsers(self):
+        """
+        Returns True if subparsers exist
+        """
+        return len(self.subparsers) > 0
 
 
 class Parser(SubparsersMixin):
