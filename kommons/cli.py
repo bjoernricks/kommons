@@ -137,9 +137,9 @@ class ArgumentGroup(object):
         """
         Constructs a ArgumentGroup instance
 
-        @param title The title of the group displayed as headline
-        @param description A detailed description of the argument group
-        @param argument_names A list of strings containing the Arguments to be
+        :param title The title of the group displayed as headline
+        :param description A detailed description of the argument group
+        :param argument_names A list of strings containing the Arguments to be
                               grouped
         """
         self.title = title
@@ -153,7 +153,7 @@ class ArgumentGroup(object):
         """
         Adds the group and its arguments to a argparse.ArgumentParser instance
 
-        @param parser A argparse.ArgumentParser instance
+        :param parser A argparse.ArgumentParser instance
         """
         self.group = parser.add_argument_group(self.title, self.description)
         for arg in self.arguments:
@@ -164,7 +164,7 @@ class ArgumentGroup(object):
         Sets the name of this group. Normally this method should not be called
         directly. It is used by the ArgumentsCollectorMetaClass.
 
-        @param name A string for a name
+        :param name A string for a name
         """
         self.name = name
 
@@ -174,7 +174,7 @@ class ArgumentGroup(object):
         Normally this method should not be called directly.
         It is used by the ArgumentsCollectorMetaClass.
 
-        @parma arg An Argument instance to be added to this group.
+        :parma arg An Argument instance to be added to this group.
         """
         self.arguments.append(arg)
 
@@ -276,7 +276,7 @@ class Argument(object):
         """
         Adds the argument to an argparse.ArgumentParser instance
 
-        @param parser An argparse.ArgumentParser instance
+        :param parser An argparse.ArgumentParser instance
         """
         kwargs = self._get_kwargs()
         args = self._get_args()
@@ -288,7 +288,7 @@ class Argument(object):
         Normally this method should not be called directly.
         It is used by the ArgumentsCollectorMetaClass.
 
-        @param name A string for a name
+        :param name A string for a name
         """
         self.name = name
 
@@ -347,7 +347,7 @@ class BaseSubparser(object):
         Adds this Subparser to the subparsers created by
         argparse.ArgumentParser.add_subparsers method.
 
-        @param subparsers Normally a _SubParsersAction instance created by
+        :param subparsers Normally a _SubParsersAction instance created by
         argparse.ArgumentParser.add_subparsers method
         """
         parser = subparsers.add_parser(*self._get_args(), **self._get_kwargs())
@@ -393,7 +393,7 @@ class SubparsersMixin(object):
         """
         Adds a Subparser instance to the list of subparsers
 
-        @param parser A Subparser instance
+        :param parser A Subparser instance
         """
         self.subparsers.append(parser)
 
@@ -415,7 +415,7 @@ class SubparsersMixin(object):
         """
         Adds the subparsers to an argparse.ArgumentParser
 
-        @param parser An argparse.ArgumentParser instance
+        :param parser An argparse.ArgumentParser instance
         """
         sgroup = getattr(self, "subparser_group", None)
         if sgroup:
