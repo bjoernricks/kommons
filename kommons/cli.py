@@ -323,10 +323,21 @@ class OptionArgument(Argument):
 
 class BaseSubparser(object):
 
+    __usage__ = None
+    __description = None
+    __epilog__ = None
+
     def __init__(self, *args, **kwargs):
         super(BaseSubparser, self).__init__()
         self.args = args
-        self.kwargs = kwargs
+        self.kwargs = {}
+        if self.__description__:
+            self.kwargs["description"] = self.__description__
+        if self.__usage__:
+            self.kwargs["usage"] = self.__usage__
+        if self.__epilog__:
+            self.kwargs["epilog"] =self.__epilog__
+        self.kwargs.update(kwargs)
         self.name = None
 
     def set_name(self, name):
