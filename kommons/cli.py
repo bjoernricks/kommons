@@ -124,8 +124,8 @@ class ArgumentGroup(object):
 
     Usage:
         class MyParser(Parser):
-            cmd1 = OptionalArgument()
-            cmd2 = OptionalArgument()
+            cmd1 = OptionArgument()
+            cmd2 = OptionArgument()
 
             group = ArgumentGroup(title="group of possible commands",
                                   argument_names=["cmd1", "cmd2"])
